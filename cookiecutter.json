@@ -1,12 +1,13 @@
 {
-    "full_name"      : "Abdó Roig-Maranges",
-    "email"          : "abdo.roig@gmail.com",
-    "project_name"   : "new-project",
-    "project_type"   : ["slides", "poster"],
-    "language"       : "english",
-    "title"          : "The Title",
-    "date"           : "{% now 'local', '%Y-%m-%d' %}",
+    "full_name"             : "Abdó Roig-Maranges",
+    "email"                 : "abdo.roig@gmail.com",
+    "project_name"          : "new-project",
+    "project_slug"          : "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
+    "project_type"          : ["slides", "poster"],
+    "language"              : "english",
+    "title"                 : "The Title",
+    "date"                  : "{% now 'local', '%Y-%m-%d' %}",
 
-    "_template"      : "latex:slides",
-    "_copy_without_render": [ "bin/*", "lib/*", "figs/*", "*.sty", "*.lua" ]
+    "_template"             : "latex:slides",
+    "_copy_without_render"  : [ "make/*", "lib/*", "figs/*", "*.sty", "*.lua" ]
 }
