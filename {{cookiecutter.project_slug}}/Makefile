@@ -252,9 +252,7 @@ $(BLDDIR)/html/%.html: $(BLDDIR)/html/%.dvi
 		t4ht -f/$(notdir $<)
 	)
 
-$(BLDDIR)/html/%.css: $(BLDDIR)/html/%.html
-
-$(BLDDIR)/%.epub: $(BLDDIR)/html/%.html $(BLDDIR)/html/%.css
+$(BLDDIR)/%.epub: $(BLDDIR)/html/%.html
 	@mkdir -p $(dir $@)
 	ebook-convert $< $@ --no-default-epub-cover
 
@@ -302,15 +300,19 @@ auto-bib:
 	cali find --fmt=bib "tag:paper:$(DOCID)" > $(DOCID).auto.bib
 
 
-.PHONY: view slideshow
+.PHONY: view-pdf view-epub view slideshow
 
-# view pdf
-view:
-	xdg-open $(DOCID).pdf &
+view-pdf: $(DOCID).pdf
+	xdg-open $< &
+
+view-epub: $(DOCID).epub
+	xdg-open $< &
+
+view: view-pdf
 
 # make a slideshow
-slideshow:
-	pdfpc $(DOCID).pdf &
+slideshow: $(DOCID).pdf
+	pdfpc $< &
 
 
 .PHONY: test
