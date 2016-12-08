@@ -21,9 +21,7 @@ TODO
 * Find a good way to store the template source within the project.
 
 
-## latex-paper
+## latex-slides
 
-* compile one chapter at a time and merge them afterwards. It would lead to a more
-  efficient compilation.
-
-        pdflatex -jobname=chapter-foo "\\includeonly{foo}\\input{master.tex}"
+* brackets do not stretch. In particular a cases environment is ugly. either
+  make them stretch, or use a proper math font for the brackets.
