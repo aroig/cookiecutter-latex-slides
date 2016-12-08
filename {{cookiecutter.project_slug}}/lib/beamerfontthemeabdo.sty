@@ -35,16 +35,13 @@
   % \setmonofont[Scale=0.8]{Hack}
   \setmonofont{Ubuntu Mono}
 
-  % math font
-  % \setmathfont[math-style=TeX]{Tex Gyre Pagella Math}
-  % \setmathfont[math-style=TeX]{Tex Gyre Bonum Math}
-  % \setmathfont[math-style=TeX]{XITS Math}
-  % \setmathfont[math-style=TeX]{Asana Math}
-
   % Default math font
-  \unimathsetup{math-style=TeX}
-  \setmathfont[]{Latin Modern Math}
-  % \setmathfont{Lato Light}
+  \unimathsetup{
+    math-style=TeX,
+    colon=literal,
+    partial=literal,
+    nabla=literal
+  }
   
   % NOTE:
   %
@@ -55,38 +52,32 @@
   %
   % * some symbols, like \partial in Lato, seem to only be available on the Regular
   %   version.
-
-  % Unicode symbols
-  % "221E \infty
-  
-  % "2202 \partial
-  % "2207 \nabla
-  % "2211 \sum
-  % "220F \prod
-
-  % "0028-"0029  ()
-  % "005B-"005D  []
-  % "007B-"007E  {}
-  
+ 
   % Unicode Ranges
   % 2190-21FF   - Arrows
   % 2200-22FF   - Mathematical symbols
 
-  % TODO
-  %
-  % * Use Lato for parenthesis
-  % * Subscript font may be too large
+  % Latin modern as default
+  \setmathfont{Latin Modern Math}
   
-  % Lato for maths up and it
-  \setmathfont[range={up,sfup,"2190-"21FF,"2200-"22FF,"0028-"0029,"005B-"005D,"007B-"007E}]{Lato Light}
+  % Lato for maths up bf and it
+  % \setmathfont{Lato Light}
+  \setmathfont[range={
+    up,sfup,
+    \ast,\infty,
+    \partial,\sum,\prod,\int,
+    \lparen,\rparen,\lbrack,\rbrack,\lbrace,\rbrace
+  } ]{Lato Light}
+  
   \setmathfont[range={it,sfit}]{Lato Light Italic}
-  \setmathfont[range={bfup,bfsfup,"2202,"2211,"220F}]{Lato Regular}
+  \setmathfont[range={bfup,bfsfup}]{Lato Regular}
   \setmathfont[range={bfit,bfsfit}]{Lato Italic}
 
+  % Alternate fonts for missing ranges in Lato
   \setmathfont[range={tt}]{Ubuntu Mono}
-  \setmathfont[range={cal,bfcal,bb,bbit}]{Latin Modern Math}
-  \setmathfont[range={scr,bfscr,frak,bffrak,"2207}]{Asana Math}
-  % \setmathfont[range={"2207}]{XITS Math}
+  \setmathfont[range={cal,bfcal,bb,bbit,\nabla}]{Latin Modern Math}
+  \setmathfont[range={scr,bfscr,frak,bffrak}]{Asana Math}
+  % \setmathfont[range={\nabla}]{XITS Math}
 
   % Title page
   \setbeamerfont{title}{size=\Large,shape=\bfseries,parent=structure}
