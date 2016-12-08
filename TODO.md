@@ -20,8 +20,8 @@ TODO
 
 * Find a good way to store the template source within the project.
 
-
 ## latex-slides
 
 * brackets do not stretch. In particular a cases environment is ugly. either
   make them stretch, or use a proper math font for the brackets.
+
