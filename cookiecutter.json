@@ -7,6 +7,5 @@
     "version"               : "0.1",
     "date"                  : "{% now 'local', '%Y-%m-%d' %}",
 
-    "_template"             : "local:latex-base",
     "_copy_without_render"  :  [  ]
 }
