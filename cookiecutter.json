@@ -9,6 +9,5 @@
     "title"                 : "The Title",
     "date"                  : "{% now 'local', '%Y-%m-%d' %}",
 
-    "_template"             : "local:latex-base",
     "_copy_without_render"  : [ "lib/*", "fig/*", "*.sty", "*.lua" ]
 }
