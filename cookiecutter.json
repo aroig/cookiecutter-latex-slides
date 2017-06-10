@@ -9,5 +9,5 @@
     "title"                 : "The Title",
     "date"                  : "{% now 'local', '%Y-%m-%d' %}",
 
-    "_copy_without_render"  : [ "lib/*", "fig/*", "*.sty", "*.lua" ]
+    "_copy_without_render"  :  [ "lib/*", "fig/*", "*.sty", "*.lua" ]
 }
