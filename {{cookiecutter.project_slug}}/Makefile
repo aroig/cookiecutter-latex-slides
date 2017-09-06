@@ -2,6 +2,8 @@
 # All rights reserved.
 #
 # This file is part of '{{ cookiecutter.project_name }}'.
+{%- import 'LICENSE' as license with context %}
+{{- license.license_header | replace("\n", "\n#") }}
 
 
 # So that we can use newlines in recipes with $(\n)

@@ -1,10 +1,13 @@
 {
     "full_name"             : "",
     "email"                 : "",
+
     "project_name"          : "Project Name",
     "project_slug"          : "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
+    "project_license"       : [ "BSD", "GPLv2", "Proprietary", "None" ],
     "project_description"   : "",
     "version"               : "0.1",
+
     "date"                  : "{% now 'local', '%Y-%m-%d' %}",
 
     "_copy_without_render"  :  [  ]

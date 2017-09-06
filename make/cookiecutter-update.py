@@ -5,6 +5,9 @@
 # All rights reserved.
 #
 # This file is part of 'LaTeX Base Cookiecutter'.
+#
+# This file may be modified and distributed under the terms of the 3-clause BSD
+# license. See the LICENSE file for details.
 
 
 import os
