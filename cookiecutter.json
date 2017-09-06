@@ -1,12 +1,16 @@
 {
-    "full_name"             : "Abdó Roig-Maranges",
-    "email"                 : "abdo.roig@gmail.com",
+    "full_name"             : "",
+    "email"                 : "",
     "url"                   : "https://www.abdoroig.net",
     "funding"               : [ "NCN2013", "MTM2015", "MTM2012", "MTM2009", "None" ],
-    "project_name"          : "new-project",
+
+    "project_name"          : "Project Name",
     "project_slug"          : "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
+    "project_license"       : [ "BSD", "GPLv2", "Proprietary", "None" ],
+    "project_description"   : "",
     "language"              : "english",
     "title"                 : "The Title",
+
     "date"                  : "{% now 'local', '%Y-%m-%d' %}",
 
     "_copy_without_render"  :  [ "lib/*", "fig/*", "*.sty", "*.lua" ]
