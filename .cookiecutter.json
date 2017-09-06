@@ -4,7 +4,9 @@
     "date": "2016-07-10",
     "email": "abdo.roig@gmail.com",
     "full_name": "Abd\u00f3 Roig-Maranges",
-    "project_description": "A LaTeX cookiecutter for slides",
-    "project_name": "LaTeX Slides Cookiecutter",
-    "project_slug": "latex-slides"
+    "project_description": "A base LaTeX cookiecutter",
+    "project_license": "BSD",
+    "project_name": "LaTeX Base Cookiecutter",
+    "project_slug": "latex-base",
+    "version": "0.1"
 }
