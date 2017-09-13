@@ -44,18 +44,18 @@ DIFFDIR    := ./build/diff
 # Source Files                     #
 #----------------------------------#
 
-METADATA   := metadata.bib
-DOCID      := $(shell perl -ne '/\@article[a-zA-Z{]*:(.*),/ && print "$$1\n"' $(METADATA))
-DOCTYPE    := $(shell perl -ne '/entrysubtype\s*=\s*{\s*(.*)\s*}/ && print "$$1\n"' $(METADATA))
+METADATA        := metadata.bib
+DOCID           := $(shell perl -ne '/\@article[a-zA-Z{]*:(.*),/ && print "$$1\n"' $(METADATA))
+DOCTYPE         := $(shell perl -ne '/entrysubtype\s*=\s*{\s*(.*)\s*}/ && print "$$1\n"' $(METADATA))
 
-MKPREAMBLE := make/mkpreamble.py
-PREAMBLE   := preamble.tex
-GITREF     := gitref
+MKPREAMBLE      := make/mkpreamble.py
+PREAMBLE        := preamble.tex
+GITREF          := gitref
 
-FIGFILES   := $(sort $(wildcard $(FIGDIR)/*.png) $(wildcard $(FIGDIR)/*.pdf))
-LIBFILES   := $(sort $(wildcard *.sty) $(wildcard $(LIBDIR)/*))
-BIBFILES   := $(sort $(filter-out $(METADATA),$(wildcard *.bib)))
-TEXFILES   := $(sort $(wildcard *.tex) $(PREAMBLE))
+FIG_FILES       := $(sort $(wildcard $(FIGDIR)/*.png) $(wildcard $(FIGDIR)/*.pdf))
+LIB_FILES       := $(sort $(wildcard *.sty) $(wildcard $(LIBDIR)/*))
+BIB_FILES       := $(sort $(filter-out $(METADATA),$(wildcard *.bib)))
+TEX_FILES       := $(sort $(wildcard *.tex) $(PREAMBLE))
 
 MASTER_FILES    := $(filter $(TGT).tex,$(sort $(shell grep -l "begin{document}" *.tex)))
 PDF_FILES       := $(patsubst %.tex,%.pdf,$(MASTER_FILES))
@@ -64,8 +64,7 @@ SYNCTEX_FILES   := $(patsubst %.pdf,%.synctex.gz,$(PDF_FILES))
 EPUB_FILES      := $(patsubst %.pdf,%.epub,$(PDF_FILES))
 SRCPKG_FILES    := $(DOCID).tar.gz
 
-BLDFILES   := Makefile .gitignore $(METADATA) $(MKPREAMBLE)
-BLDFILES   := $(foreach f,$(BLDFILES),$(wildcard $(f)))
+BUILD_FILES     := $(wildcard Makefile .gitignore $(METADATA) $(MKPREAMBLE))
 
 
 #----------------------------------#
@@ -92,14 +91,14 @@ latex-dependencies = $1.tex $(foreach p,\
 
 # bibliography files
 doc-pdf-dependencies = $(call latex-dependencies,$1)       \
-                       $(if $(BIBFILES),$(BLDDIR)/$1.bbl)  \
-                       $(PREAMBLE) $(LIBFILES) $(FIGFILES)
+                       $(if $(BIB_FILES),$(BLDDIR)/$1.bbl)  \
+                       $(PREAMBLE) $(LIB_FILES) $(FIG_FILES)
 
 doc-src-dependencies = $(call doc-pdf-dependencies,$1)
 
 doc-html-dependencies = $(call latex-dependencies,$1)           \
-                        $(if $(BIBFILES),$(BLDDIR)/html/$1.bbl) \
-                        $(PREAMBLE) $(LIBFILES) $(FIGFILES)
+                        $(if $(BIB_FILES),$(BLDDIR)/html/$1.bbl) \
+                        $(PREAMBLE) $(LIB_FILES) $(FIG_FILES)
 
 # write string $2 to file $1 only if it is different from its contents.
 write-if-changed-cmd = if [ ! -f "$2" ] || [ ! "$1" = "`cat $2 2> /dev/null`" ]; then echo "$1" > "$2"; fi
@@ -149,7 +148,7 @@ flatsrc: $(patsubst %,$(FLATDIR)/%,$(SRCPKG_FILES))
 diff: $(patsubst %,$(DIFFDIR)/%,$(PDF_FILES))
 
 ## Produce figures
-figs: $(FIGFILES)
+figs: $(FIG_FILES)
 
 ## Remove build files
 clean:
@@ -233,7 +232,7 @@ $(BLDDIR)/%.bcf: | $$(call latex-dependencies,%)
 		--output-directory=$(dir $@) $*.tex
 
 # Prepare bibliography when bibliography file changes. Do not rebuild when bcf file changes.
-$(BLDDIR)/%.bbl: $(BIBFILES) | $(BLDDIR)/%.bcf
+$(BLDDIR)/%.bbl: $(BIB_FILES) | $(BLDDIR)/%.bcf
 	@mkdir -p $(dir $@)
 	$(BIBTEX) --input-directory=$(dir $@) --output-directory=$(dir $@) $*.bcf
 
@@ -249,14 +248,14 @@ $(BLDDIR)/%.pdf: %.tex $$(call doc-pdf-dependencies,%) | $(BLDDIR)/$(GITREF)
 		--synctex=1 --output-directory=$(dir $@) $<
 
 # Compile one chapter alone
-$(BLDDIR)/chapter-%.pdf: chapter-%.tex $(PREAMBLE) $(FIGFILES) | $(BLDDIR)/$(GITREF)
+$(BLDDIR)/chapter-%.pdf: chapter-%.tex $(PREAMBLE) $(FIG_FILES) | $(BLDDIR)/$(GITREF)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) \
 		--synctex=1 --output-directory=$(dir $@) \
 		-jobname=chapter-$* "\\includeonly{$<}\\input{$(DOCID).tex}"
 
 # Make a tar.gz package of the sources
-$(BLDDIR)/%.tar.gz: %.tex $$(call doc-src-dependencies) $(BIBFILES) $(BLDFILES)
+$(BLDDIR)/%.tar.gz: %.tex $$(call doc-src-dependencies) $(BIB_FILES) $(BUILD_FILES)
 	@mkdir -p $(dir $@)
 	tar -cz -f $@ $(patsubst ./%,%,$^)
 
