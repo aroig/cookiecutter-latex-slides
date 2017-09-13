@@ -10,6 +10,9 @@
 # Variables                        #
 #----------------------------------#
 
+## List of patterns of master file names
+TGT             := %
+
 # Tools
 LATEX              := latex
 LUALATEX           := lualatex
@@ -23,6 +26,7 @@ LATEXDIFF_PACKAGES := amsmath hyperref
 LATEX_FLAGS        := --shell-escape --halt-on-error --interaction=nonstopmode
 LATEXDIFF_FLAGS    := --packages=$(subst ' ',',',$(LATEXDIFF_PACKAGES)) \
                       --config "PICTUREENV=(?:$(subst ' ',|,$(LATEXDIFF_IGNORE)))[\w\d*@]*"
+
 
 #----------------------------------#
 # Directories                      #
@@ -52,10 +56,15 @@ FIGFILES   := $(sort $(wildcard $(FIGDIR)/*.png) $(wildcard $(FIGDIR)/*.pdf))
 LIBFILES   := $(sort $(wildcard *.sty) $(wildcard $(LIBDIR)/*))
 BIBFILES   := $(sort $(filter-out $(METADATA),$(wildcard *.bib)))
 TEXFILES   := $(sort $(wildcard *.tex) $(PREAMBLE))
-AUXFILES   := $(patsubst %.tex,$(notdir %.aux),$(TEXFILES))
-TOCFILES   := $(DOCID).toc
 
-BLDFILES   := Makefile .gitignore README.md $(METADATA) $(MKPREAMBLE)
+MASTER_FILES    := $(filter $(TGT).tex,$(sort $(shell grep -l "begin{document}" *.tex)))
+PDF_FILES       := $(patsubst %.tex,%.pdf,$(MASTER_FILES))
+PDF2IN1_FILES   := $(patsubst %.pdf,%.2in1.pdf,$(PDF_FILES))
+SYNCTEX_FILES   := $(patsubst %.pdf,%.synctex.gz,$(PDF_FILES))
+EPUB_FILES      := $(patsubst %.pdf,%.epub,$(PDF_FILES))
+SRCPKG_FILES    := $(DOCID).tar.gz
+
+BLDFILES   := Makefile .gitignore $(METADATA) $(MKPREAMBLE)
 BLDFILES   := $(foreach f,$(BLDFILES),$(wildcard $(f)))
 
 
@@ -71,11 +80,11 @@ REF        := HEAD
 # Functions                        #
 #----------------------------------#
 
-# setup environment for some commands
+# Setup environment for some commands
 latex-environment  = TEXINPUTS="$1:$(LIBDIR):$(FIGDIR):" LUAINPUTS="$1:$(LIBDIR):"
 lua-environment    = LUA_PATH="$(LIBDIR)/?.lua"
 
-# extract tex file dependencies
+# Extract tex file dependencies
 latex-dependencies = $1.tex $(foreach p,\
 	$(shell perl -ne '/^\s*\\(input|include)\{(.*?)(.tex)?\}/ && print "$$2.tex "' $1.tex),\
 	$(dir $1)$(p)\
@@ -119,25 +128,25 @@ SHELL       := /usr/bin/bash
 all: pdf
 
 ## Build PDF
-pdf: $(DOCID).pdf $(DOCID).synctex.gz
+pdf: $(PDF_FILES) $(SYNCTEX_FILES)
 
 ## Build epub
-epub: $(DOCID).epub
+epub: $(EPUB_FILES)
 
 ## Build PDF 2-in-1
-2in1: $(DOCID).2in1.pdf
+2in1: $(PDF2IN1_FILES)
 
 ## Build source packages
-src: $(DOCID).tar.gz
+src: $(SRCPKG_FILES)
 
 ## Build flattened PDF
-flat: $(FLATDIR)/$(DOCID).pdf
+flat: $(patsubst %,$(FLATDIR)/%,$(PDF_FILES))
 
 ## Build flattened sources
-flatsrc: $(FLATDIR)/$(DOCID).tar.gz
+flatsrc: $(patsubst %,$(FLATDIR)/%,$(SRCPKG_FILES))
 
 ## Build PDF with differences highlighted
-diff: $(DIFFDIR)/$(DOCID).pdf
+diff: $(patsubst %,$(DIFFDIR)/%,$(PDF_FILES))
 
 ## Produce figures
 figs: $(FIGFILES)
@@ -180,7 +189,7 @@ $(BLDDIR)/%.ps.imposed: $(BLDDIR)/%.ps
 	cp $< $@
 
 %.synctex.gz: $(BLDDIR)/%.pdf
-	cp "$(BLDDIR)/$*.synctex.gz" "$@"
+	cp $(BLDDIR)/$*.synctex.gz $@
 
 %.tar.gz: $(BLDDIR)/%.tar.gz
 	cp $< $@
@@ -207,23 +216,23 @@ $(DIFFDIR)/old/%.tex: $(DIFFDIR)/$(GITREF)
 # Preamble and bibliography        #
 #----------------------------------#
 
-# create a preamble tex file
+# Create a preamble tex file
 $(PREAMBLE): $(MKPREAMBLE) $(METADATA)
 	@python $^ > $@
 
-# precompile headers
+# Precompile headers
 $(BLDDIR)/preamble.fmt: $(PREAMBLE)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) -ini \
 		-job-name="preamble" "&lualatex $<\dump" --output-directory=$(dir $@) $<
 
-# compile document to produce the bcf file. we do not want to rebuild on every tex file change.
+# Compile document to produce the bcf file. we do not want to rebuild on every tex file change.
 $(BLDDIR)/%.bcf: | $$(call latex-dependencies,%)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) \
 		--output-directory=$(dir $@) $*.tex
 
-# prepare bibliography when bibliography file changes. Do not rebuild when bcf file changes.
+# Prepare bibliography when bibliography file changes. Do not rebuild when bcf file changes.
 $(BLDDIR)/%.bbl: $(BIBFILES) | $(BLDDIR)/%.bcf
 	@mkdir -p $(dir $@)
 	$(BIBTEX) --input-directory=$(dir $@) --output-directory=$(dir $@) $*.bcf
@@ -233,25 +242,25 @@ $(BLDDIR)/%.bbl: $(BIBFILES) | $(BLDDIR)/%.bcf
 # pdf document                     #
 #----------------------------------#
 
-# compile pdf with up to date bibliography
+# Compile pdf with up to date bibliography
 $(BLDDIR)/%.pdf: %.tex $$(call doc-pdf-dependencies,%) | $(BLDDIR)/$(GITREF)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) \
 		--synctex=1 --output-directory=$(dir $@) $<
 
-# compile one chapter alone
+# Compile one chapter alone
 $(BLDDIR)/chapter-%.pdf: chapter-%.tex $(PREAMBLE) $(FIGFILES) | $(BLDDIR)/$(GITREF)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) \
 		--synctex=1 --output-directory=$(dir $@) \
 		-jobname=chapter-$* "\\includeonly{$<}\\input{$(DOCID).tex}"
 
-# make a tar.gz package of the sources
+# Make a tar.gz package of the sources
 $(BLDDIR)/%.tar.gz: %.tex $$(call doc-src-dependencies) $(BIBFILES) $(BLDFILES)
 	@mkdir -p $(dir $@)
 	tar -cz -f $@ $(patsubst ./%,%,$^)
 
-# make a tikz figure
+# Make a tikz figure
 $(FIGDIR)/%.pdf: $(FIGDIR)/%.tex
 	@( cd $(FIGDIR); $(LUALATEX) --jobname=$* --output-directory=$(BLDDIR) $(notdir $<) )
 	cp $(BLDDIR)/$*.pdf $@
@@ -319,18 +328,18 @@ auto-bib:
 .PHONY: view-pdf view-epub view slideshow
 
 ## Open PDF document
-view-pdf: $(DOCID).pdf
+view-pdf: $(firstword $(PDF_FILES))
 	xdg-open $< &
 
 ## Open epub document
-view-epub: $(DOCID).epub
+view-epub: $(firstword $(EPUB_FILES))
 	xdg-open $< &
 
 ## Open PDF document
 view: view-pdf
 
 ## Start a slideshow
-slideshow: $(DOCID).pdf
+slideshow: $(firstword $(PDF_FILES))
 	pdfpc $< &
 
 
