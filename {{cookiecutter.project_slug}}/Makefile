@@ -10,6 +10,9 @@
 # Variables                        #
 #----------------------------------#
 
+## List of patterns of master file names
+TGT             := %
+
 # Tools
 LATEX              := latex
 LUALATEX           := lualatex
@@ -23,6 +26,7 @@ LATEXDIFF_PACKAGES := amsmath hyperref
 LATEX_FLAGS        := --shell-escape --halt-on-error --interaction=nonstopmode
 LATEXDIFF_FLAGS    := --packages=$(subst ' ',',',$(LATEXDIFF_PACKAGES)) \
                       --config "PICTUREENV=(?:$(subst ' ',|,$(LATEXDIFF_IGNORE)))[\w\d*@]*"
+
 
 #----------------------------------#
 # Directories                      #
@@ -40,23 +44,27 @@ DIFFDIR    := ./build/diff
 # Source Files                     #
 #----------------------------------#
 
-METADATA   := metadata.bib
-DOCID      := $(shell perl -ne '/\@article[a-zA-Z{]*:(.*),/ && print "$$1\n"' $(METADATA))
-DOCTYPE    := $(shell perl -ne '/entrysubtype\s*=\s*{\s*(.*)\s*}/ && print "$$1\n"' $(METADATA))
+METADATA        := metadata.bib
+DOCID           := $(shell perl -ne '/\@article[a-zA-Z{]*:(.*),/ && print "$$1\n"' $(METADATA))
+DOCTYPE         := $(shell perl -ne '/entrysubtype\s*=\s*{\s*(.*)\s*}/ && print "$$1\n"' $(METADATA))
 
-MKPREAMBLE := make/mkpreamble.py
-PREAMBLE   := preamble.tex
-GITREF     := gitref
+MKPREAMBLE      := make/mkpreamble.py
+PREAMBLE        := preamble.tex
+GITREF          := gitref
 
-FIGFILES   := $(sort $(wildcard $(FIGDIR)/*.png) $(wildcard $(FIGDIR)/*.pdf))
-LIBFILES   := $(sort $(wildcard *.sty) $(wildcard $(LIBDIR)/*))
-BIBFILES   := $(sort $(filter-out $(METADATA),$(wildcard *.bib)))
-TEXFILES   := $(sort $(wildcard *.tex) $(PREAMBLE))
-AUXFILES   := $(patsubst %.tex,$(notdir %.aux),$(TEXFILES))
-TOCFILES   := $(DOCID).toc
+FIG_FILES       := $(sort $(wildcard $(FIGDIR)/*.png) $(wildcard $(FIGDIR)/*.pdf))
+LIB_FILES       := $(sort $(wildcard *.sty) $(wildcard $(LIBDIR)/*))
+BIB_FILES       := $(sort $(filter-out $(METADATA),$(wildcard *.bib)))
+TEX_FILES       := $(sort $(wildcard *.tex) $(PREAMBLE))
 
-BLDFILES   := Makefile .gitignore README.md $(METADATA) $(MKPREAMBLE)
-BLDFILES   := $(foreach f,$(BLDFILES),$(wildcard $(f)))
+MASTER_FILES    := $(filter $(TGT).tex,$(sort $(shell grep -l "begin{document}" *.tex)))
+PDF_FILES       := $(patsubst %.tex,%.pdf,$(MASTER_FILES))
+PDF2IN1_FILES   := $(patsubst %.pdf,%.2in1.pdf,$(PDF_FILES))
+SYNCTEX_FILES   := $(patsubst %.pdf,%.synctex.gz,$(PDF_FILES))
+EPUB_FILES      := $(patsubst %.pdf,%.epub,$(PDF_FILES))
+SRCPKG_FILES    := $(DOCID).tar.gz
+
+BUILD_FILES     := $(wildcard Makefile .gitignore $(METADATA) $(MKPREAMBLE))
 
 
 #----------------------------------#
@@ -71,11 +79,11 @@ REF        := HEAD
 # Functions                        #
 #----------------------------------#
 
-# setup environment for some commands
+# Setup environment for some commands
 latex-environment  = TEXINPUTS="$1:$(LIBDIR):$(FIGDIR):" LUAINPUTS="$1:$(LIBDIR):"
 lua-environment    = LUA_PATH="$(LIBDIR)/?.lua"
 
-# extract tex file dependencies
+# Extract tex file dependencies
 latex-dependencies = $1.tex $(foreach p,\
 	$(shell perl -ne '/^\s*\\(input|include)\{(.*?)(.tex)?\}/ && print "$$2.tex "' $1.tex),\
 	$(dir $1)$(p)\
@@ -83,14 +91,14 @@ latex-dependencies = $1.tex $(foreach p,\
 
 # bibliography files
 doc-pdf-dependencies = $(call latex-dependencies,$1)       \
-                       $(if $(BIBFILES),$(BLDDIR)/$1.bbl)  \
-                       $(PREAMBLE) $(LIBFILES) $(FIGFILES)
+                       $(if $(BIB_FILES),$(BLDDIR)/$1.bbl)  \
+                       $(PREAMBLE) $(LIB_FILES) $(FIG_FILES)
 
 doc-src-dependencies = $(call doc-pdf-dependencies,$1)
 
 doc-html-dependencies = $(call latex-dependencies,$1)           \
-                        $(if $(BIBFILES),$(BLDDIR)/html/$1.bbl) \
-                        $(PREAMBLE) $(LIBFILES) $(FIGFILES)
+                        $(if $(BIB_FILES),$(BLDDIR)/html/$1.bbl) \
+                        $(PREAMBLE) $(LIB_FILES) $(FIG_FILES)
 
 # write string $2 to file $1 only if it is different from its contents.
 write-if-changed-cmd = if [ ! -f "$2" ] || [ ! "$1" = "`cat $2 2> /dev/null`" ]; then echo "$1" > "$2"; fi
@@ -119,28 +127,28 @@ SHELL       := /usr/bin/bash
 all: pdf
 
 ## Build PDF
-pdf: $(DOCID).pdf $(DOCID).synctex.gz
+pdf: $(PDF_FILES) $(SYNCTEX_FILES)
 
 ## Build epub
-epub: $(DOCID).epub
+epub: $(EPUB_FILES)
 
 ## Build PDF 2-in-1
-2in1: $(DOCID).2in1.pdf
+2in1: $(PDF2IN1_FILES)
 
 ## Build source packages
-src: $(DOCID).tar.gz
+src: $(SRCPKG_FILES)
 
 ## Build flattened PDF
-flat: $(FLATDIR)/$(DOCID).pdf
+flat: $(patsubst %,$(FLATDIR)/%,$(PDF_FILES))
 
 ## Build flattened sources
-flatsrc: $(FLATDIR)/$(DOCID).tar.gz
+flatsrc: $(patsubst %,$(FLATDIR)/%,$(SRCPKG_FILES))
 
 ## Build PDF with differences highlighted
-diff: $(DIFFDIR)/$(DOCID).pdf
+diff: $(patsubst %,$(DIFFDIR)/%,$(PDF_FILES))
 
 ## Produce figures
-figs: $(FIGFILES)
+figs: $(FIG_FILES)
 
 ## Remove build files
 clean:
@@ -180,7 +188,7 @@ $(BLDDIR)/%.ps.imposed: $(BLDDIR)/%.ps
 	cp $< $@
 
 %.synctex.gz: $(BLDDIR)/%.pdf
-	cp "$(BLDDIR)/$*.synctex.gz" "$@"
+	cp $(BLDDIR)/$*.synctex.gz $@
 
 %.tar.gz: $(BLDDIR)/%.tar.gz
 	cp $< $@
@@ -207,24 +215,24 @@ $(DIFFDIR)/old/%.tex: $(DIFFDIR)/$(GITREF)
 # Preamble and bibliography        #
 #----------------------------------#
 
-# create a preamble tex file
+# Create a preamble tex file
 $(PREAMBLE): $(MKPREAMBLE) $(METADATA)
 	@python $^ > $@
 
-# precompile headers
+# Precompile headers
 $(BLDDIR)/preamble.fmt: $(PREAMBLE)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) -ini \
 		-job-name="preamble" "&lualatex $<\dump" --output-directory=$(dir $@) $<
 
-# compile document to produce the bcf file. we do not want to rebuild on every tex file change.
+# Compile document to produce the bcf file. we do not want to rebuild on every tex file change.
 $(BLDDIR)/%.bcf: | $$(call latex-dependencies,%)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) \
 		--output-directory=$(dir $@) $*.tex
 
-# prepare bibliography when bibliography file changes. Do not rebuild when bcf file changes.
-$(BLDDIR)/%.bbl: $(BIBFILES) | $(BLDDIR)/%.bcf
+# Prepare bibliography when bibliography file changes. Do not rebuild when bcf file changes.
+$(BLDDIR)/%.bbl: $(BIB_FILES) | $(BLDDIR)/%.bcf
 	@mkdir -p $(dir $@)
 	$(BIBTEX) --input-directory=$(dir $@) --output-directory=$(dir $@) $*.bcf
 
@@ -233,25 +241,25 @@ $(BLDDIR)/%.bbl: $(BIBFILES) | $(BLDDIR)/%.bcf
 # pdf document                     #
 #----------------------------------#
 
-# compile pdf with up to date bibliography
+# Compile pdf with up to date bibliography
 $(BLDDIR)/%.pdf: %.tex $$(call doc-pdf-dependencies,%) | $(BLDDIR)/$(GITREF)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) \
 		--synctex=1 --output-directory=$(dir $@) $<
 
-# compile one chapter alone
-$(BLDDIR)/chapter-%.pdf: chapter-%.tex $(PREAMBLE) $(FIGFILES) | $(BLDDIR)/$(GITREF)
+# Compile one chapter alone
+$(BLDDIR)/chapter-%.pdf: chapter-%.tex $(PREAMBLE) $(FIG_FILES) | $(BLDDIR)/$(GITREF)
 	@mkdir -p $(dir $@)
 	$(call latex-environment,$(dir $<)) $(LUALATEX) $(LATEX_FLAGS) \
 		--synctex=1 --output-directory=$(dir $@) \
 		-jobname=chapter-$* "\\includeonly{$<}\\input{$(DOCID).tex}"
 
-# make a tar.gz package of the sources
-$(BLDDIR)/%.tar.gz: %.tex $$(call doc-src-dependencies) $(BIBFILES) $(BLDFILES)
+# Make a tar.gz package of the sources
+$(BLDDIR)/%.tar.gz: %.tex $$(call doc-src-dependencies) $(BIB_FILES) $(BUILD_FILES)
 	@mkdir -p $(dir $@)
 	tar -cz -f $@ $(patsubst ./%,%,$^)
 
-# make a tikz figure
+# Make a tikz figure
 $(FIGDIR)/%.pdf: $(FIGDIR)/%.tex
 	@( cd $(FIGDIR); $(LUALATEX) --jobname=$* --output-directory=$(BLDDIR) $(notdir $<) )
 	cp $(BLDDIR)/$*.pdf $@
@@ -319,18 +327,18 @@ auto-bib:
 .PHONY: view-pdf view-epub view slideshow
 
 ## Open PDF document
-view-pdf: $(DOCID).pdf
+view-pdf: $(firstword $(PDF_FILES))
 	xdg-open $< &
 
 ## Open epub document
-view-epub: $(DOCID).epub
+view-epub: $(firstword $(EPUB_FILES))
 	xdg-open $< &
 
 ## Open PDF document
 view: view-pdf
 
 ## Start a slideshow
-slideshow: $(DOCID).pdf
+slideshow: $(firstword $(PDF_FILES))
 	pdfpc $< &
 
 
