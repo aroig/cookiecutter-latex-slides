@@ -65,9 +65,9 @@ update-copyright:
 
 ## Print Makefile documentation
 help:
-	@perl -0 -nle 'printf("%-25s - %s\n", "$$2", "$$1") while m/^##\s*([^\r\n]+)\n^([\w-]+):[^=]/gm' \
+	@perl -0 -nle 'printf("%-25s - %s\n", "$$2", "$$1") while m/^##\s*([^\r\n]+)\R^([\w-]+):[^=]/gm' \
 		$(MAKEFILE_LIST) | sort
 	printf "\n"
-	perl -0 -nle 'printf("%-25s - %s\n", "$$2=", "$$1") while m/^##\s*([^\r\n]+)\n^([\w-]+)\s*:=/gm' \
+	perl -0 -nle 'printf("%-25s - %s\n", "$$2=", "$$1") while m/^##\s*([^\r\n]+)\R^([\w-]+)\s*:=/gm' \
 		$(MAKEFILE_LIST) | sort
 
