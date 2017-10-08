@@ -9,7 +9,6 @@
     "project_license"       : [ "BSD", "GPLv2", "Proprietary", "None" ],
     "project_description"   : "",
     "language"              : "english",
-    "title"                 : "The Title",
 
     "date"                  : "{% now 'local', '%Y-%m-%d' %}",
 
