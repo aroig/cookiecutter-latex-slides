@@ -46,11 +46,16 @@ entrysubtype = {{ "{" + cookiecutter.project_type + "}"}},
   department = {Departament de Matemàtiques},
      address = {Av. Diagonal, 647},
         city = {08028 Barcelona},
-{% else %}
+{% elif cookiecutter.funding in [ "NCN2013" ] %}
   university = {University of Warsaw},
   department = {Institute of Mathematics},
      address = {ul. Banacha, 2},
         city = {02-097 Warszawa},
+{% else %}
+  university = {},
+  department = {},
+     address = {},
+        city = {Barcelona},
 {% endif -%}
 {% if cookiecutter.funding == "MTM2009" %}
       thanks = {Partially supported by MICINN (MTM2009-09557) and the ``Comissionat
