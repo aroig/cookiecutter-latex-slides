@@ -2,7 +2,7 @@
     "full_name"             : "",
     "email"                 : "",
     "url"                   : "",
-    "funding"               : [ "NCN2013", "MTM2015", "MTM2012", "MTM2009", "None" ],
+    "funding"               : [ "None", "NCN2013", "MTM2015", "MTM2012", "MTM2009" ],
 
     "project_name"          : "Project Name",
     "project_slug"          : "{{ cookiecutter.project_name.lower().replace(' ', '-') }}",
